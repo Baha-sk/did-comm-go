@@ -6,9 +6,9 @@ SPDX-License-Identifier: Apache-2.0
 
 package transport
 
-// Transport interface definition for transport layer
-// This is a WIP interface.
-type Transport interface {
+// OutboundTransport interface definition for transport layer
+// This is the client side of the agent
+type OutboundTransport interface {
 	// Send send a2a exchange data
-	Send(data string) error
+	Send(data string, destination string) error
 }
