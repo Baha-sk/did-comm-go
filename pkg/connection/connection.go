@@ -31,46 +31,22 @@ func NewDIDComm(transport transport.OutboundTransport) *DIDComm {
 	return &DIDComm{transport: transport}
 }
 
-// SendInviteWithPublicDID sends the invite with public DID
-func (comm *DIDComm) SendInviteWithPublicDID(id, label, did string) error {
-	if id == "" && did == "" {
-		return errors.New("id and DID are necessary to send the Invite message")
+// GenerateInviteWithPublicDID generates the DID exchange invitation string with public DID
+func GenerateInviteWithPublicDID(inviteMessage *didexchange.InviteMessage) (string, error) {
+	if inviteMessage.ID == "" || inviteMessage.DID == "" {
+		return "", errors.New("ID and DID are mandatory")
 	}
 
-	invitationJSON, err := json.Marshal(buildInvitationMessage(connectionInvite, id, label, did, nil, "", nil))
-	if err != nil {
-		return errors.Wrapf(err, "Marshal Send Invite message Error")
-	}
-
-	return comm.transport.Send(base64.URLEncoding.EncodeToString(invitationJSON), "https://localhost:8090") // TODO need to add destination url here
+	return encodedExchangeInvitation(inviteMessage)
 }
 
-// SendInviteWithKeyAndURLEndpoint sends the invite with recipient key and URL endpoint
-func (comm *DIDComm) SendInviteWithKeyAndURLEndpoint(id, label string, recipientKeys []string, serviceEndpoint string, routingKeys []string) error {
-	if id == "" {
-		return errors.New("id is necessary to send the Invite message")
+// GenerateInviteWithKeyAndEndpoint generates the DID exchange invitation string with recipient key and endpoint
+func GenerateInviteWithKeyAndEndpoint(inviteMessage *didexchange.InviteMessage) (string, error) {
+	if inviteMessage.ID == "" || inviteMessage.ServiceEndpoint == "" || len(inviteMessage.RecipientKeys) == 0 {
+		return "", errors.New("ID, Service Endpoint and Recipient Key are mandatory")
 	}
 
-	invitationJSON, err := json.Marshal(buildInvitationMessage(connectionInvite, id, label, "", recipientKeys, serviceEndpoint, routingKeys))
-	if err != nil {
-		return errors.Wrapf(err, "Marshal Send Invite Message with Key and URL Error")
-	}
-
-	return comm.transport.Send(base64.URLEncoding.EncodeToString(invitationJSON), "https://localhost:8090") // same comment as above
-}
-
-// SendInviteWithKeyAndDIDServiceEndpoint sends the invite with recipient key and DID service endpoint
-func (comm *DIDComm) SendInviteWithKeyAndDIDServiceEndpoint(id, label string, recipientKeys []string, serviceEndpoint string, routingKeys []string) error {
-	if id == "" {
-		return errors.New("id is necessary to send the Invite message")
-	}
-
-	invitationJSON, err := json.Marshal(buildInvitationMessage(connectionInvite, id, label, "", recipientKeys, serviceEndpoint, routingKeys))
-	if err != nil {
-		return errors.Wrapf(err, "Marshal Send Invite Message with Key and DID Service Endpoint Error")
-	}
-
-	return comm.transport.Send(base64.URLEncoding.EncodeToString(invitationJSON), "https://localhost:8090") // same comment as above
+	return encodedExchangeInvitation(inviteMessage)
 }
 
 // SendExchangeRequest sends exchange request
@@ -101,14 +77,13 @@ func (comm *DIDComm) SendExchangeResponse(exchangeResponse *didexchange.Response
 	return comm.transport.Send(string(exchangeResponseJSON), "https://localhost:8090") // same comment as above
 }
 
-func buildInvitationMessage(messageType, id, label, did string, recipientKeys []string, serviceEndpoint string, routingKeys []string) *didexchange.InviteMessage {
-	return &didexchange.InviteMessage{
-		Type:            messageType,
-		ID:              id,
-		Label:           label,
-		DID:             did,
-		RecipientKeys:   recipientKeys,
-		ServiceEndpoint: serviceEndpoint,
-		RoutingKeys:     routingKeys,
+func encodedExchangeInvitation(inviteMessage *didexchange.InviteMessage) (string, error) {
+	inviteMessage.Type = connectionInvite
+
+	invitationJSON, err := json.Marshal(inviteMessage)
+	if err != nil {
+		return "", errors.Wrapf(err, "JSON Marshal Error")
 	}
+
+	return base64.URLEncoding.EncodeToString(invitationJSON), nil
 }

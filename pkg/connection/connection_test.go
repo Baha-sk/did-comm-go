@@ -22,60 +22,66 @@ const certPrefix = "../transport/http/test/fixtures/certs/"
 const certPoolsPaths = certPrefix + "ec-pubCert1.pem," + certPrefix + "ec-pubCert2.pem," + certPrefix + "ec-pubCert3.pem,"
 const clientTimeout = 10 * time.Second
 
-func TestSendInviteWithPublicDID(t *testing.T) {
-	oCommConfig := &httptransport.OutboundCommConfig{
-		Timeout:      clientTimeout,
-		CACertsPaths: certPoolsPaths,
-	}
-	oTr, err := httptransport.NewOutboundCommFromConfig(oCommConfig)
-	require.NoError(t, err)
-	didComm := NewDIDComm(oTr)
+func TestGenerateInviteWithPublicDID(t *testing.T) {
+	invite, err := GenerateInviteWithPublicDID(&didexchange.InviteMessage{
+		ID:    "12345678900987654321",
+		Label: "Alice",
+		DID:   "did:trustbloc:ZadolSRQkehfo",
+	})
 
-	require.NoError(t, didComm.SendInviteWithPublicDID(
-		"12345678900987654321",
-		"Alice",
-		"did:trustbloc:ZadolSRQkehfo",
-	))
+	require.NotEmpty(t, invite)
 
-	require.Error(t, didComm.SendInviteWithPublicDID("", "test", ""))
+	invite, err = GenerateInviteWithPublicDID(&didexchange.InviteMessage{
+		ID:    "12345678900987654321",
+		Label: "Alice",
+	})
+	require.Error(t, err)
+	require.Empty(t, invite)
+
+	invite, err = GenerateInviteWithPublicDID(&didexchange.InviteMessage{
+		Label: "Alice",
+		DID:   "did:trustbloc:ZadolSRQkehfo",
+	})
+	require.Error(t, err)
+	require.Empty(t, invite)
 }
 
-func TestSendInviteWithKeyAndURLEndpoint(t *testing.T) {
-	oCommConfig := &httptransport.OutboundCommConfig{
-		Timeout:      clientTimeout,
-		CACertsPaths: certPoolsPaths,
-	}
-	oTr, err := httptransport.NewOutboundCommFromConfig(oCommConfig)
-	require.NoError(t, err)
-	didComm := NewDIDComm(oTr)
+func TestGenerateInviteWithKeyAndEndpoint(t *testing.T) {
+	invite, err := GenerateInviteWithKeyAndEndpoint(&didexchange.InviteMessage{
+		ID:              "12345678900987654321",
+		Label:           "Alice",
+		RecipientKeys:   []string{"8HH5gYEeNc3z7PYXmd54d4x6qAfCNrqQqEB3nS7Zfu7K"},
+		ServiceEndpoint: "https://example.com/endpoint",
+		RoutingKeys:     []string{"8HH5gYEeNc3z7PYXmd54d4x6qAfCNrqQqEB3nS7Zfu7K"},
+	})
+	require.NotEmpty(t, invite)
 
-	require.NoError(t, didComm.SendInviteWithKeyAndURLEndpoint(
-		"12345678900987654321",
-		"Alice",
-		[]string{"8HH5gYEeNc3z7PYXmd54d4x6qAfCNrqQqEB3nS7Zfu7K"},
-		"https://example.com/endpoint",
-		[]string{"8HH5gYEeNc3z7PYXmd54d4x6qAfCNrqQqEB3nS7Zfu7K"}))
+	invite, err = GenerateInviteWithKeyAndEndpoint(&didexchange.InviteMessage{
+		Label:           "Alice",
+		RecipientKeys:   []string{"8HH5gYEeNc3z7PYXmd54d4x6qAfCNrqQqEB3nS7Zfu7K"},
+		ServiceEndpoint: "https://example.com/endpoint",
+		RoutingKeys:     []string{"8HH5gYEeNc3z7PYXmd54d4x6qAfCNrqQqEB3nS7Zfu7K"},
+	})
+	require.Error(t, err)
+	require.Empty(t, invite)
 
-	require.Error(t, didComm.SendInviteWithKeyAndURLEndpoint("", "test", nil, "", nil))
-}
+	invite, err = GenerateInviteWithKeyAndEndpoint(&didexchange.InviteMessage{
+		ID:            "12345678900987654321",
+		Label:         "Alice",
+		RecipientKeys: []string{"8HH5gYEeNc3z7PYXmd54d4x6qAfCNrqQqEB3nS7Zfu7K"},
+		RoutingKeys:   []string{"8HH5gYEeNc3z7PYXmd54d4x6qAfCNrqQqEB3nS7Zfu7K"},
+	})
+	require.Error(t, err)
+	require.Empty(t, invite)
 
-func TestSendInviteWithKeyAndDIDServiceEndpoint(t *testing.T) {
-	oCommConfig := &httptransport.OutboundCommConfig{
-		Timeout:      clientTimeout,
-		CACertsPaths: certPoolsPaths,
-	}
-	oTr, err := httptransport.NewOutboundCommFromConfig(oCommConfig)
-	require.NoError(t, err)
-	didComm := NewDIDComm(oTr)
-
-	require.NoError(t, didComm.SendInviteWithKeyAndDIDServiceEndpoint(
-		"12345678900987654321",
-		"Alice",
-		[]string{"8HH5gYEeNc3z7PYXmd54d4x6qAfCNrqQqEB3nS7Zfu7K"},
-		"did:trustbloc:ZadolSRQkehfo;service=routeid",
-		[]string{"8HH5gYEeNc3z7PYXmd54d4x6qAfCNrqQqEB3nS7Zfu7K"}))
-
-	require.Error(t, didComm.SendInviteWithKeyAndDIDServiceEndpoint("", "test", nil, "", nil))
+	invite, err = GenerateInviteWithKeyAndEndpoint(&didexchange.InviteMessage{
+		ID:              "12345678900987654321",
+		Label:           "Alice",
+		ServiceEndpoint: "https://example.com/endpoint",
+		RoutingKeys:     []string{"8HH5gYEeNc3z7PYXmd54d4x6qAfCNrqQqEB3nS7Zfu7K"},
+	})
+	require.Error(t, err)
+	require.Empty(t, invite)
 }
 
 func TestSendRequest(t *testing.T) {
