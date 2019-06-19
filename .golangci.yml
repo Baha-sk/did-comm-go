@@ -8,7 +8,7 @@ service:
   project-path: github.com/trustbloc/did-comm-go
   golangci-lint-version: 1.16.x
   prepare:
-    - GO111MODULE=on
+    - GO111MODULE=on go mod vendor
 
 run:
   concurrency: 4
