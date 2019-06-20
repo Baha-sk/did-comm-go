@@ -33,7 +33,7 @@ type httpTestCase struct {
 var testHandler http.Handler
 var oCommHTTPClient *OutboundCommHTTP
 
-const certPrefix = "test/fixtures/certs/"
+const certPrefix = "../../../test/fixtures/keys/"
 const certPoolsPaths = certPrefix + "ec-pubCert1.pem," + certPrefix + "ec-pubCert2.pem," + certPrefix + "ec-pubCert3.pem,"
 const clientTimeout = 10 * time.Second
 
@@ -162,7 +162,13 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Failed to create an OutboundComm client: %s", err)
 	}
 
-	go httpServer.ListenAndServeTLS(certPrefix+"ec-pubCert1.pem", certPrefix+"ec-key1.pem")
+	go func() {
+		err := httpServer.ListenAndServeTLS(certPrefix+"ec-pubCert1.pem", certPrefix+"ec-key1.pem")
+		if err != nil && err.Error() != "http: Server closed" {
+			log.Fatalf("HTTP server failed to start: %v", err)
+		}
+	}()
+
 	rc := m.Run()
 	err = httpServer.Close()
 	if err != nil {
