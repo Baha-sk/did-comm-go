@@ -50,7 +50,7 @@ func GenerateInviteWithKeyAndEndpoint(inviteMessage *didexchange.InviteMessage) 
 }
 
 // SendExchangeRequest sends exchange request
-func (comm *DIDComm) SendExchangeRequest(exchangeRequest *didexchange.Request) error {
+func (comm *DIDComm) SendExchangeRequest(exchangeRequest *didexchange.Request, destination string) error {
 	if exchangeRequest == nil {
 		return errors.New("exchangeRequest cannot be nil")
 	}
@@ -60,11 +60,11 @@ func (comm *DIDComm) SendExchangeRequest(exchangeRequest *didexchange.Request) e
 		return errors.Wrapf(err, "Marshal Send Exchange Request Error")
 	}
 
-	return comm.transport.Send(string(exchangeRequestJSON), "https://localhost:8090") // same comment as above
+	return comm.transport.Send(string(exchangeRequestJSON), destination)
 }
 
 // SendExchangeResponse sends exchange response
-func (comm *DIDComm) SendExchangeResponse(exchangeResponse *didexchange.Response) error {
+func (comm *DIDComm) SendExchangeResponse(exchangeResponse *didexchange.Response, destination string) error {
 	if exchangeResponse == nil {
 		return errors.New("exchangeResponse cannot be nil")
 	}
@@ -74,7 +74,7 @@ func (comm *DIDComm) SendExchangeResponse(exchangeResponse *didexchange.Response
 		return errors.Wrapf(err, "Marshal Send Exchange Response Error")
 	}
 
-	return comm.transport.Send(string(exchangeResponseJSON), "https://localhost:8090") // same comment as above
+	return comm.transport.Send(string(exchangeResponseJSON), destination)
 }
 
 func encodedExchangeInvitation(inviteMessage *didexchange.InviteMessage) (string, error) {
