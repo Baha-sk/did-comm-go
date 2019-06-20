@@ -21,6 +21,7 @@ import (
 const certPrefix = "../transport/http/test/fixtures/certs/"
 const certPoolsPaths = certPrefix + "ec-pubCert1.pem," + certPrefix + "ec-pubCert2.pem," + certPrefix + "ec-pubCert3.pem,"
 const clientTimeout = 10 * time.Second
+const destinationURL = "https://localhost:8090"
 
 func TestGenerateInviteWithPublicDID(t *testing.T) {
 	invite, err := GenerateInviteWithPublicDID(&didexchange.InviteMessage{
@@ -98,8 +99,8 @@ func TestSendRequest(t *testing.T) {
 		Label: "Bob",
 	}
 
-	require.NoError(t, didComm.SendExchangeRequest(req))
-	require.Error(t, didComm.SendExchangeRequest(nil))
+	require.NoError(t, didComm.SendExchangeRequest(req, destinationURL))
+	require.Error(t, didComm.SendExchangeRequest(nil, destinationURL))
 }
 
 func TestSendResponse(t *testing.T) {
@@ -118,8 +119,8 @@ func TestSendResponse(t *testing.T) {
 		},
 	}
 
-	require.NoError(t, didComm.SendExchangeResponse(resp))
-	require.Error(t, didComm.SendExchangeResponse(nil))
+	require.NoError(t, didComm.SendExchangeResponse(resp, destinationURL))
+	require.Error(t, didComm.SendExchangeResponse(nil, destinationURL))
 }
 
 func TestMain(m *testing.M) {
