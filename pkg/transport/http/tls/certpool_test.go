@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const certPrefix = "../test/fixtures/certs/"
+const certPrefix = "../../../../test/fixtures/keys/"
 const certPoolsPaths = certPrefix + "ec-pubCert1.pem," + certPrefix + "ec-pubCert2.pem," + certPrefix + "ec-pubCert3.pem,"
 
 func TestNewCertPool(t *testing.T) {

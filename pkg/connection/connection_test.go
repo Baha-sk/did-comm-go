@@ -18,7 +18,7 @@ import (
 	httptransport "github.com/trustbloc/did-comm-go/pkg/transport/http"
 )
 
-const certPrefix = "../transport/http/test/fixtures/certs/"
+const certPrefix = "../../test/fixtures/keys/"
 const certPoolsPaths = certPrefix + "ec-pubCert1.pem," + certPrefix + "ec-pubCert2.pem," + certPrefix + "ec-pubCert3.pem,"
 const clientTimeout = 10 * time.Second
 const destinationURL = "https://localhost:8090"
@@ -131,7 +131,12 @@ func TestMain(m *testing.M) {
 		Handler: mh,
 	}
 
-	go httpServer.ListenAndServeTLS(certPrefix+"ec-pubCert1.pem", certPrefix+"ec-key1.pem")
+	go func() {
+		err := httpServer.ListenAndServeTLS(certPrefix+"ec-pubCert1.pem", certPrefix+"ec-key1.pem")
+		if err != nil && err.Error() != "http: Server closed" {
+			log.Fatalf("HTTP server failed to start: %v", err)
+		}
+	}()
 	rc := m.Run()
 
 	err := httpServer.Close()
