@@ -21,16 +21,6 @@ const (
 	connectionResponse = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/response"
 )
 
-// DIDComm supports DID communication apis
-type DIDComm struct {
-	transport transport.OutboundTransport
-}
-
-// NewDIDComm creates new instance of DID Communication
-func NewDIDComm(transport transport.OutboundTransport) *DIDComm {
-	return &DIDComm{transport: transport}
-}
-
 // GenerateInviteWithPublicDID generates the DID exchange invitation string with public DID
 func GenerateInviteWithPublicDID(inviteMessage *didexchange.InviteMessage) (string, error) {
 	if inviteMessage.ID == "" || inviteMessage.DID == "" {
@@ -50,7 +40,7 @@ func GenerateInviteWithKeyAndEndpoint(inviteMessage *didexchange.InviteMessage) 
 }
 
 // SendExchangeRequest sends exchange request
-func (comm *DIDComm) SendExchangeRequest(exchangeRequest *didexchange.Request, destination string) error {
+func SendExchangeRequest(exchangeRequest *didexchange.Request, destination string, transport transport.OutboundTransport) error {
 	if exchangeRequest == nil {
 		return errors.New("exchangeRequest cannot be nil")
 	}
@@ -60,11 +50,11 @@ func (comm *DIDComm) SendExchangeRequest(exchangeRequest *didexchange.Request, d
 		return errors.Wrapf(err, "Marshal Send Exchange Request Error")
 	}
 
-	return comm.transport.Send(string(exchangeRequestJSON), destination)
+	return transport.Send(string(exchangeRequestJSON), destination)
 }
 
 // SendExchangeResponse sends exchange response
-func (comm *DIDComm) SendExchangeResponse(exchangeResponse *didexchange.Response, destination string) error {
+func SendExchangeResponse(exchangeResponse *didexchange.Response, destination string, transport transport.OutboundTransport) error {
 	if exchangeResponse == nil {
 		return errors.New("exchangeResponse cannot be nil")
 	}
@@ -74,7 +64,7 @@ func (comm *DIDComm) SendExchangeResponse(exchangeResponse *didexchange.Response
 		return errors.Wrapf(err, "Marshal Send Exchange Response Error")
 	}
 
-	return comm.transport.Send(string(exchangeResponseJSON), destination)
+	return transport.Send(string(exchangeResponseJSON), destination)
 }
 
 func encodedExchangeInvitation(inviteMessage *didexchange.InviteMessage) (string, error) {
