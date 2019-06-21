@@ -92,15 +92,14 @@ func TestSendRequest(t *testing.T) {
 	}
 	oTr, err := httptransport.NewOutboundCommFromConfig(oCommConfig)
 	require.NoError(t, err)
-	didComm := NewDIDComm(oTr)
 
 	req := &didexchange.Request{
 		ID:    "5678876542345",
 		Label: "Bob",
 	}
 
-	require.NoError(t, didComm.SendExchangeRequest(req, destinationURL))
-	require.Error(t, didComm.SendExchangeRequest(nil, destinationURL))
+	require.NoError(t, SendExchangeRequest(req, destinationURL, oTr))
+	require.Error(t, SendExchangeRequest(nil, destinationURL, oTr))
 }
 
 func TestSendResponse(t *testing.T) {
@@ -110,7 +109,6 @@ func TestSendResponse(t *testing.T) {
 	}
 	oTr, err := httptransport.NewOutboundCommFromConfig(oCommConfig)
 	require.NoError(t, err)
-	didComm := NewDIDComm(oTr)
 
 	resp := &didexchange.Response{
 		ID: "12345678900987654321",
@@ -119,8 +117,8 @@ func TestSendResponse(t *testing.T) {
 		},
 	}
 
-	require.NoError(t, didComm.SendExchangeResponse(resp, destinationURL))
-	require.Error(t, didComm.SendExchangeResponse(nil, destinationURL))
+	require.NoError(t, SendExchangeResponse(resp, destinationURL, oTr))
+	require.Error(t, SendExchangeResponse(nil, destinationURL, oTr))
 }
 
 func TestMain(m *testing.M) {
