@@ -6,6 +6,8 @@ SPDX-License-Identifier: Apache-2.0
 
 package didexchange
 
+import "github.com/trustbloc/did-common-go/pkg/diddoc"
+
 // InviteMessage defines a2a invite message
 type InviteMessage struct {
 	Type            string   `json:"@type,omitempty"`
@@ -48,11 +50,6 @@ type ConnectionSignature struct {
 
 // Connection connection
 type Connection struct {
-	DID    string  `json:"did,omitempty"`
-	DIDDoc *DIDDoc `json:"did_doc,omitempty"`
-}
-
-// DIDDoc did document
-// TODO can this be defined in did-common-go ?
-type DIDDoc struct {
+	DID    string         `json:"did,omitempty"`
+	DIDDoc *diddoc.DIDDoc `json:"did_doc,omitempty"`
 }
