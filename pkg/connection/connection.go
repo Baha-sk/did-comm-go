@@ -50,7 +50,8 @@ func SendExchangeRequest(exchangeRequest *didexchange.Request, destination strin
 		return errors.Wrapf(err, "Marshal Send Exchange Request Error")
 	}
 
-	return transport.Send(string(exchangeRequestJSON), destination)
+	_, err = transport.Send(string(exchangeRequestJSON), destination)
+	return err
 }
 
 // SendExchangeResponse sends exchange response
@@ -64,7 +65,8 @@ func SendExchangeResponse(exchangeResponse *didexchange.Response, destination st
 		return errors.Wrapf(err, "Marshal Send Exchange Response Error")
 	}
 
-	return transport.Send(string(exchangeResponseJSON), destination)
+	_, err = transport.Send(string(exchangeResponseJSON), destination)
+	return err
 }
 
 func encodedExchangeInvitation(inviteMessage *didexchange.InviteMessage) (string, error) {

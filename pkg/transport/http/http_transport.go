@@ -74,21 +74,28 @@ func NewOutboundCommFromClient(client *http.Client) (*OutboundCommHTTP, error) {
 }
 
 // Send sends a2a exchange data via HTTP (client side)
-func (cs *OutboundCommHTTP) Send(data string, url string) error {
+func (cs *OutboundCommHTTP) Send(data string, url string) (string, error) {
 	resp, err := cs.client.Post(url, commContentType, bytes.NewBuffer([]byte(data)))
 	if err != nil {
 		log.Printf("HTTP Transport - Error posting did envelope to agent at [%s]: %v", url, err)
-		return err
+		return "", err
 	}
 
+	var respData string
 	if resp != nil {
 		isStatusSuccess := resp.StatusCode == http.StatusAccepted || resp.StatusCode == http.StatusOK
 		if !isStatusSuccess {
-			return errors.Errorf("Warning - Received non success POST HTTP status from agent at [%s]: status : %v", url, resp.Status)
+			return "", errors.Errorf("Warning - Received non success POST HTTP status from agent at [%s]: status : %v", url, resp.Status)
 		}
-		// handle response here (if needed)
+		// handle response
+		buf := new(bytes.Buffer)
+		_, err := buf.ReadFrom(resp.Body)
+		if err != nil {
+			return "", err
+		}
+		respData = buf.String()
 	}
-	return nil
+	return respData, nil
 }
 
 // creates a new instance of HTTP transport as a client
