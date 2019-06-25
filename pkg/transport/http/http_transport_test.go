@@ -28,6 +28,7 @@ type httpTestCase struct {
 	sendUrl      string
 	sendPayload  string
 	failSend     bool
+	respData     string
 }
 
 var testHandler http.Handler
@@ -46,6 +47,7 @@ func TestHTTPTransport(t *testing.T) {
 			url:          "/",
 			contentType:  "",
 			failHTTPPost: true,
+			respData:     "success",
 		},
 		{
 			name:         "Fail: Empty content type",
@@ -53,6 +55,7 @@ func TestHTTPTransport(t *testing.T) {
 			url:          "/",
 			contentType:  "",
 			failHTTPPost: true,
+			respData:     "success",
 		},
 		{
 			name:         "Fail: Empty HTTP method",
@@ -60,6 +63,7 @@ func TestHTTPTransport(t *testing.T) {
 			url:          "/",
 			contentType:  commContentType,
 			failHTTPPost: true,
+			respData:     "success",
 		},
 		{
 			name:         "Fail: bad url, content not found",
@@ -67,6 +71,7 @@ func TestHTTPTransport(t *testing.T) {
 			url:          "/badurl",
 			contentType:  commContentType,
 			failHTTPPost: true,
+			respData:     "success",
 		},
 		{
 			name:         "Pass - valid POST request",
@@ -77,6 +82,7 @@ func TestHTTPTransport(t *testing.T) {
 			sendUrl:      "https://localhost:8090",
 			sendPayload:  "test",
 			failSend:     false,
+			respData:     "success",
 		},
 		{
 			name:         "Send Fail - valid POST request but invalid Send call",
@@ -87,6 +93,7 @@ func TestHTTPTransport(t *testing.T) {
 			sendUrl:      "https://badurl",
 			sendPayload:  "test",
 			failSend:     true,
+			respData:     "success",
 		},
 		{
 			name:         "Send Fail - valid POST request and Send() URL but with bad payload",
@@ -97,6 +104,7 @@ func TestHTTPTransport(t *testing.T) {
 			sendUrl:      "https://localhost:8090",
 			sendPayload:  "bad",
 			failSend:     true,
+			respData:     "success",
 		},
 	}
 	for _, tc := range tcs {
@@ -112,12 +120,13 @@ func TestHTTPTransport(t *testing.T) {
 			if !tc.failHTTPPost {
 				require.Equal(t, http.StatusAccepted, rr.Code)
 
-				err = oCommHTTPClient.Send(tc.sendPayload, tc.sendUrl)
+				respData, err := oCommHTTPClient.Send(tc.sendPayload, tc.sendUrl)
 				if tc.failSend {
 					require.Error(t, err)
 					return
 				}
 				require.NoError(t, err)
+				require.Equal(t, tc.respData, respData)
 			}
 		})
 	}

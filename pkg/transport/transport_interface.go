@@ -10,5 +10,5 @@ package transport
 // This is the client side of the agent
 type OutboundTransport interface {
 	// Send send a2a exchange data
-	Send(data string, destination string) error
+	Send(data string, destination string) (string, error)
 }
