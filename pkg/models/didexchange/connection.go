@@ -35,11 +35,6 @@ type Response struct {
 	Thread              *Thread              `json:"~thread,omitempty"`
 }
 
-// Thread thread data
-type Thread struct {
-	ID string `json:"@thid,omitempty"`
-}
-
 // ConnectionSignature connection signature
 type ConnectionSignature struct {
 	Type       string `json:"@type,omitempty"`
