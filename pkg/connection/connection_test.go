@@ -14,8 +14,8 @@ import (
 	"log"
 
 	"github.com/stretchr/testify/require"
-	"github.com/trustbloc/did-comm-go/pkg/models/didexchange"
-	httptransport "github.com/trustbloc/did-comm-go/pkg/transport/http"
+	"github.com/trustbloc/aries-framework-go/pkg/models/didexchange"
+	httptransport "github.com/trustbloc/aries-framework-go/pkg/transport/http"
 )
 
 const certPrefix = "../../test/fixtures/keys/"

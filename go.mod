@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-module github.com/trustbloc/did-comm-go
+module github.com/trustbloc/aries-framework-go
 
 require (
 	github.com/pkg/errors v0.8.1

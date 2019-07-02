@@ -7,7 +7,7 @@
 set -e
 
 # Packages to exclude
-PKGS=`go list github.com/trustbloc/did-comm-go/... 2> /dev/null | \
+PKGS=`go list github.com/trustbloc/aries-framework-go/... 2> /dev/null | \
                                                  grep -v /mocks | \
                                                  grep -v /protos`
 

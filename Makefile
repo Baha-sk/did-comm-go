@@ -21,8 +21,8 @@ unit-test: generate-test-keys
 generate-test-keys: clean
 	@mkdir -p -p test/fixtures/keys/tls
 	@docker run -i --rm \
-		-v $(abspath .):/opt/go/src/github.com/trustbloc/did-comm-go \
-		--entrypoint "/opt/go/src/github.com/trustbloc/did-comm-go/scripts/generate_test_keys.sh" \
+		-v $(abspath .):/opt/go/src/github.com/trustbloc/aries-framework-go \
+		--entrypoint "/opt/go/src/github.com/trustbloc/aries-framework-go/scripts/generate_test_keys.sh" \
 		frapsoft/openssl
 
 clean:
