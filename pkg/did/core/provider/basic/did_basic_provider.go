@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	didprovider "github.com/trustbloc/did-comm-go/pkg/did/core/provider"
+	didprovider "github.com/trustbloc/aries-framework-go/pkg/did/core/provider"
 )
 
 // Provider provider structure

@@ -5,7 +5,7 @@
 #
 
 service:
-  project-path: github.com/trustbloc/did-comm-go
+  project-path: github.com/trustbloc/aries-framework-go
   golangci-lint-version: 1.16.x
   prepare:
     - GO111MODULE=on go mod vendor

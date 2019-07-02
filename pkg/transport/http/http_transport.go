@@ -18,7 +18,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	tlsCertPool "github.com/trustbloc/did-comm-go/pkg/transport/http/tls"
+	tlsCertPool "github.com/trustbloc/aries-framework-go/pkg/transport/http/tls"
 )
 
 const commContentType = "application/didcomm-envelope-enc"

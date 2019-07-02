@@ -11,8 +11,8 @@ import (
 	"encoding/json"
 
 	"github.com/pkg/errors"
-	"github.com/trustbloc/did-comm-go/pkg/models/didexchange"
-	"github.com/trustbloc/did-comm-go/pkg/transport"
+	"github.com/trustbloc/aries-framework-go/pkg/models/didexchange"
+	"github.com/trustbloc/aries-framework-go/pkg/transport"
 )
 
 const (
