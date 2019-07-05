@@ -7,21 +7,15 @@ SPDX-License-Identifier: Apache-2.0
 package connection
 
 import (
-	"net/http"
 	"testing"
-	"time"
-
-	"log"
 
 	"github.com/stretchr/testify/require"
+	mock "github.com/trustbloc/aries-framework-go/pkg/mocks"
 	"github.com/trustbloc/aries-framework-go/pkg/models/didexchange"
-	httptransport "github.com/trustbloc/aries-framework-go/pkg/transport/http"
 )
 
-const certPrefix = "../../test/fixtures/keys/"
-const certPoolsPaths = certPrefix + "ec-pubCert1.pem," + certPrefix + "ec-pubCert2.pem," + certPrefix + "ec-pubCert3.pem,"
-const clientTimeout = 10 * time.Second
 const destinationURL = "https://localhost:8090"
+const successResponse = "success"
 
 func TestGenerateInviteWithPublicDID(t *testing.T) {
 	invite, err := GenerateInviteWithPublicDID(&didexchange.InviteMessage{
@@ -86,12 +80,7 @@ func TestGenerateInviteWithKeyAndEndpoint(t *testing.T) {
 }
 
 func TestSendRequest(t *testing.T) {
-	oCommConfig := &httptransport.OutboundCommConfig{
-		Timeout:      clientTimeout,
-		CACertsPaths: certPoolsPaths,
-	}
-	oTr, err := httptransport.NewOutboundCommFromConfig(oCommConfig)
-	require.NoError(t, err)
+	oTr := mock.NewOutboundTransport(successResponse)
 
 	req := &didexchange.Request{
 		ID:    "5678876542345",
@@ -103,12 +92,7 @@ func TestSendRequest(t *testing.T) {
 }
 
 func TestSendResponse(t *testing.T) {
-	oCommConfig := &httptransport.OutboundCommConfig{
-		Timeout:      clientTimeout,
-		CACertsPaths: certPoolsPaths,
-	}
-	oTr, err := httptransport.NewOutboundCommFromConfig(oCommConfig)
-	require.NoError(t, err)
+	oTr := mock.NewOutboundTransport(successResponse)
 
 	resp := &didexchange.Response{
 		ID: "12345678900987654321",
@@ -119,39 +103,4 @@ func TestSendResponse(t *testing.T) {
 
 	require.NoError(t, SendExchangeResponse(resp, destinationURL, oTr))
 	require.Error(t, SendExchangeResponse(nil, destinationURL, oTr))
-}
-
-func TestMain(m *testing.M) {
-	mh := httptransport.DidCommHandler(mockHttpHandler{})
-
-	httpServer := &http.Server{
-		Addr:    ":8090",
-		Handler: mh,
-	}
-
-	go func() {
-		err := httpServer.ListenAndServeTLS(certPrefix+"ec-pubCert1.pem", certPrefix+"ec-key1.pem")
-		if err != nil && err.Error() != "http: Server closed" {
-			log.Fatalf("HTTP server failed to start: %v", err)
-		}
-	}()
-	rc := m.Run()
-
-	err := httpServer.Close()
-	if err != nil {
-		log.Fatalf("Failed to stop server: %s, integration test results: %d", err, rc)
-	}
-}
-
-type mockHttpHandler struct {
-	mux *http.ServeMux
-}
-
-func (m mockHttpHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	m.serve(res, req)
-}
-
-func (m *mockHttpHandler) serve(res http.ResponseWriter, req *http.Request) {
-	// mocking successful response
-	res.WriteHeader(http.StatusAccepted)
 }
