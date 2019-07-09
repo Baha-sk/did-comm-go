@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/trustbloc/aries-framework-go/pkg/transport"
 	tlsCertPool "github.com/trustbloc/aries-framework-go/pkg/transport/http/tls"
 )
 
@@ -164,23 +165,80 @@ func buildNewCertPool(tlsCertPool tlsCertPool.CertPool) (*tls.Config, error) {
 	return tlsConfig, nil
 }
 
-// DidCommHandler will create a new handler to enforce Did-Comm HTTP transport specs
+// DIDCommRequestHandler will create a new handler to enforce Did-Comm HTTP transport specs
 // then routes processing to the passed in handler argument
-func DidCommHandler(handler http.Handler) http.Handler {
+func DIDCommRequestHandler(handler http.Handler, commHandler *transport.DIDCommHandler) http.Handler {
+
+	validateHandler(commHandler)
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// validate HTTP method and content-type
-		switch r.Method {
-		case "POST":
-			ct := r.Header.Get("Content-type")
-			if ct != commContentType {
-				http.Error(w, fmt.Sprintf("Unsupported Content-type \"%s\"", ct), http.StatusUnsupportedMediaType)
-				return
-			}
-		default:
-			http.Error(w, "Only POST is allowed", http.StatusMethodNotAllowed)
+		switch r.URL.Path {
+		case commHandler.ExchangeRequest.Path:
+			processPOSTRequest(w, r, commHandler.ExchangeRequest.HandlerFunc)
+			return
+		case commHandler.ExchangeResponse.Path:
+			processPOSTRequest(w, r, commHandler.ExchangeResponse.HandlerFunc)
 			return
 		}
 
 		handler.ServeHTTP(w, r)
 	})
+}
+
+// TODO Log error message with common trustbloc/logger-lib
+func processPOSTRequest(w http.ResponseWriter, r *http.Request, router func([]byte) error) {
+	if valid := validMethodAndContentType(w, r); !valid {
+		return
+	}
+	body, valid := validateAndGetPayload(r, w)
+	if !valid {
+		return
+	}
+	err := router(body)
+	if err != nil {
+		http.Error(w, "Error processing the request", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusAccepted)
+
+}
+
+// validateAndGetPayload validate and get the payload from the request
+func validateAndGetPayload(r *http.Request, w http.ResponseWriter) ([]byte, bool) {
+	if r.Body == nil {
+		http.Error(w, "Invalid payload", http.StatusBadRequest)
+		return nil, false
+	}
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil || string(body) == "" {
+		http.Error(w, "Error payload", http.StatusBadRequest)
+		return nil, false
+	}
+	return body, true
+}
+
+// validMethodAndContentType validate HTTP method and content-type
+func validMethodAndContentType(w http.ResponseWriter, r *http.Request) bool {
+	ct := r.Header.Get("Content-type")
+	if ct != commContentType {
+		http.Error(w, fmt.Sprintf("Unsupported Content-type \"%s\"", ct), http.StatusUnsupportedMediaType)
+		return false
+	}
+
+	if r.Method != "POST" {
+		http.Error(w, "HTTP Method not allowed", http.StatusMethodNotAllowed)
+		return false
+	}
+	return true
+}
+
+func validateHandler(router *transport.DIDCommHandler) {
+	validateRequestRouter(router.ExchangeRequest, "Exchange Request")
+	validateRequestRouter(router.ExchangeResponse, "Exchange Response")
+}
+
+func validateRequestRouter(processor *transport.RequestRouter, handlerType string) {
+	if processor == nil || processor.Path == "" || processor.HandlerFunc == nil {
+		panic("Missing mandatory path and handler function for " + handlerType)
+	}
 }

@@ -13,22 +13,26 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
+	"github.com/trustbloc/aries-framework-go/pkg/transport"
 )
 
 type httpTestCase struct {
-	name         string
-	httpMethod   string
-	url          string
-	contentType  string
-	failHTTPPost bool
-	sendUrl      string
-	sendPayload  string
-	failSend     bool
-	respData     string
+	name           string
+	httpMethod     string
+	url            string
+	contentType    string
+	failHTTPPost   bool
+	sendUrl        string
+	sendPayload    string
+	failSend       bool
+	respData       string
+	expectedStatus int
 }
 
 var testHandler http.Handler
@@ -37,80 +41,143 @@ var oCommHTTPClient *OutboundCommHTTP
 const certPrefix = "../../../test/fixtures/keys/"
 const certPoolsPaths = certPrefix + "ec-pubCert1.pem," + certPrefix + "ec-pubCert2.pem," + certPrefix + "ec-pubCert3.pem,"
 const clientTimeout = 10 * time.Second
+const exchangeRequest = "/exchange-request"
+const exchangeResponse = "/exchange-response"
 
 func TestHTTPTransport(t *testing.T) {
 	// test wrong/bad handler requests and finally a passing test case
 	tcs := []httpTestCase{
 		{
-			name:         "Fail: Empty HTTP method and content type",
-			httpMethod:   "",
-			url:          "/",
-			contentType:  "",
-			failHTTPPost: true,
-			respData:     "success",
+			name:           "Fail: bad url, content not found",
+			httpMethod:     "POST",
+			url:            "/badurl",
+			contentType:    commContentType,
+			failHTTPPost:   true,
+			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			name:         "Fail: Empty content type",
-			httpMethod:   "POST",
-			url:          "/",
-			contentType:  "",
-			failHTTPPost: true,
-			respData:     "success",
+			name:           "Pass - valid POST request",
+			httpMethod:     "POST",
+			url:            "/",
+			contentType:    commContentType,
+			failHTTPPost:   false,
+			sendUrl:        "https://localhost:8090",
+			sendPayload:    "test",
+			failSend:       false,
+			respData:       "success",
+			expectedStatus: http.StatusAccepted,
 		},
 		{
-			name:         "Fail: Empty HTTP method",
-			httpMethod:   "",
-			url:          "/",
-			contentType:  commContentType,
-			failHTTPPost: true,
-			respData:     "success",
+			name:           "Send Fail - valid POST request but invalid Send call",
+			httpMethod:     "POST",
+			url:            "/",
+			contentType:    commContentType,
+			failHTTPPost:   true,
+			sendUrl:        "https://badurl",
+			sendPayload:    "test",
+			failSend:       true,
+			respData:       "success",
+			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			name:         "Fail: bad url, content not found",
-			httpMethod:   "POST",
-			url:          "/badurl",
-			contentType:  commContentType,
-			failHTTPPost: true,
-			respData:     "success",
+			name:           "Send Fail - valid POST request and Send() URL but with bad payload",
+			httpMethod:     "POST",
+			url:            "/",
+			contentType:    commContentType,
+			failHTTPPost:   true,
+			sendUrl:        "https://localhost:8090",
+			sendPayload:    "bad",
+			failSend:       true,
+			respData:       "success",
+			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			name:         "Pass - valid POST request",
-			httpMethod:   "POST",
-			url:          "/",
-			contentType:  commContentType,
-			failHTTPPost: false,
-			sendUrl:      "https://localhost:8090",
-			sendPayload:  "test",
-			failSend:     false,
-			respData:     "success",
+			name:           "Send Exchange Request",
+			httpMethod:     "POST",
+			url:            exchangeRequest,
+			contentType:    commContentType,
+			failHTTPPost:   false,
+			sendUrl:        "https://localhost:8090" + exchangeRequest,
+			sendPayload:    "valid",
+			failSend:       false,
+			respData:       "",
+			expectedStatus: http.StatusAccepted,
 		},
 		{
-			name:         "Send Fail - valid POST request but invalid Send call",
-			httpMethod:   "POST",
-			url:          "/",
-			contentType:  commContentType,
-			failHTTPPost: false,
-			sendUrl:      "https://badurl",
-			sendPayload:  "test",
-			failSend:     true,
-			respData:     "success",
+			name:           "Send Exchange Request - invalid request payload",
+			httpMethod:     "POST",
+			url:            exchangeRequest,
+			contentType:    commContentType,
+			failHTTPPost:   false,
+			sendUrl:        "https://localhost:8090" + exchangeRequest,
+			sendPayload:    "invalid",
+			failSend:       true,
+			respData:       "",
+			expectedStatus: http.StatusInternalServerError,
 		},
 		{
-			name:         "Send Fail - valid POST request and Send() URL but with bad payload",
-			httpMethod:   "POST",
-			url:          "/",
-			contentType:  commContentType,
-			failHTTPPost: false,
-			sendUrl:      "https://localhost:8090",
-			sendPayload:  "bad",
-			failSend:     true,
-			respData:     "success",
+			name:           "Send Exchange Response",
+			httpMethod:     "POST",
+			url:            exchangeResponse,
+			contentType:    commContentType,
+			failHTTPPost:   false,
+			sendUrl:        "https://localhost:8090" + exchangeResponse,
+			sendPayload:    "bad",
+			failSend:       false,
+			respData:       "",
+			expectedStatus: http.StatusAccepted,
+		},
+		{
+			name:           "Send Exchange Request - invalid HTTP Method",
+			httpMethod:     "GET",
+			url:            exchangeRequest,
+			contentType:    commContentType,
+			failHTTPPost:   false,
+			sendUrl:        "https://localhost:8090" + exchangeRequest,
+			sendPayload:    "bad",
+			failSend:       false,
+			respData:       "",
+			expectedStatus: http.StatusMethodNotAllowed,
+		},
+		{
+			name:           "Send Exchange Request - Empty payload",
+			httpMethod:     "POST",
+			url:            exchangeRequest,
+			contentType:    commContentType,
+			failHTTPPost:   false,
+			sendUrl:        "https://localhost:8090" + exchangeRequest,
+			sendPayload:    "",
+			failSend:       true,
+			respData:       "",
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name:           "Send Exchange Request - Nil payload",
+			httpMethod:     "POST",
+			url:            exchangeRequest,
+			contentType:    commContentType,
+			failHTTPPost:   false,
+			sendUrl:        "https://localhost:8090" + exchangeRequest,
+			failSend:       true,
+			respData:       "",
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name:           "Send Exchange Request - Invalid content type",
+			httpMethod:     "POST",
+			url:            exchangeRequest,
+			contentType:    "abc",
+			failHTTPPost:   false,
+			sendUrl:        "https://localhost:8090" + exchangeRequest,
+			failSend:       true,
+			respData:       "",
+			expectedStatus: http.StatusUnsupportedMediaType,
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			// test HTTPHandler
-			req, err := http.NewRequest(tc.httpMethod, tc.url, nil)
+			req, err := http.NewRequest(tc.httpMethod, tc.url, strings.NewReader(tc.sendPayload))
 			require.NoError(t, err, "unexpected error")
 			req.Header.Set("Content-type", tc.contentType)
 
@@ -118,7 +185,7 @@ func TestHTTPTransport(t *testing.T) {
 			testHandler.ServeHTTP(rr, req)
 
 			if !tc.failHTTPPost {
-				require.Equal(t, http.StatusAccepted, rr.Code)
+				require.Equal(t, tc.expectedStatus, rr.Code)
 
 				respData, err := oCommHTTPClient.Send(tc.sendPayload, tc.sendUrl)
 				if tc.failSend {
@@ -130,6 +197,9 @@ func TestHTTPTransport(t *testing.T) {
 			}
 		})
 	}
+
+	require.Panics(t, func() { DIDCommRequestHandler(mockHttpHandler{}, &transport.DIDCommHandler{}) },
+		"The code did not panic without mandatory path/handlers")
 }
 
 type mockHttpHandler struct {
@@ -140,6 +210,11 @@ func (m mockHttpHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 }
 
 func mockHandlingRoute(res http.ResponseWriter, req *http.Request) {
+	if req.URL.Path == "/badurl" {
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	if req.Body != nil {
 		body, err := ioutil.ReadAll(req.Body)
 		if err != nil || string(body) == "bad" {
@@ -155,7 +230,19 @@ func mockHandlingRoute(res http.ResponseWriter, req *http.Request) {
 }
 
 func TestMain(m *testing.M) {
-	testHandler = DidCommHandler(mockHttpHandler{})
+	exchangeHandler := &transport.DIDCommHandler{
+		ExchangeRequest: &transport.RequestRouter{Path: exchangeRequest, HandlerFunc: func(payload []byte) error {
+			if string(payload) == "invalid" {
+				return errors.New("Invalid payload")
+			}
+			return nil
+		}},
+		ExchangeResponse: &transport.RequestRouter{Path: exchangeResponse, HandlerFunc: func(payload []byte) error {
+			return nil
+		}},
+	}
+
+	testHandler = DIDCommRequestHandler(mockHttpHandler{}, exchangeHandler)
 	httpServer := &http.Server{
 		Addr:    ":8090",
 		Handler: testHandler,
