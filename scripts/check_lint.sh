@@ -7,7 +7,11 @@
 
 set -e
 
-DOCKER_CMD=docker
+DOCKER_CMD=${DOCKER_CMD:-docker}
+
+if [ ! $(command -v ${DOCKER_CMD}) ]; then
+    exit 0
+fi
 
 echo "GolangCI Linter :: Started"
 

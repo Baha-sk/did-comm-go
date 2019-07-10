@@ -1,0 +1,29 @@
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+version: 2
+
+jobs:
+  checks:
+    docker:
+      - image: golangci/build-runner
+    environment:
+      - REPO: github.com/trustbloc/aries-framework-go
+      - RUN: 1
+    working_directory: ~/go/src/github.com/trustbloc/aries-framework-go
+    steps:
+      - checkout
+      - run: make checks
+      - run: goenvbuild
+  unit-test:
+    docker:
+      - image: circleci/golang:1.12
+    steps:
+      - checkout
+      - run: make unit-test
+workflows:
+  version: 2
+  checks-test:
+    jobs:
+      - checks
+      - unit-test
