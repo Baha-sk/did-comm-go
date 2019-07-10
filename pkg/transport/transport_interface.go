@@ -21,7 +21,10 @@ type RequestRouter struct {
 
 // DIDCommHandler struct to pass details for request handlers
 type DIDCommHandler struct {
-	RecieveInvitation *RequestRouter
-	ExchangeRequest   *RequestRouter
-	ExchangeResponse  *RequestRouter
+	RecieveInvitation    *RequestRouter
+	ExchangeRequest      *RequestRouter
+	ExchangeResponse     *RequestRouter
+	IntroductionProposal *RequestRouter
+	IntroductionRequest  *RequestRouter
+	IntroductionResponse *RequestRouter
 }
