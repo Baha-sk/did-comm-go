@@ -43,6 +43,9 @@ const certPoolsPaths = certPrefix + "ec-pubCert1.pem," + certPrefix + "ec-pubCer
 const clientTimeout = 10 * time.Second
 const exchangeRequest = "/exchange-request"
 const exchangeResponse = "/exchange-response"
+const introductionProposal = "/introduction-proposal"
+const introductionRequest = "/introduction-request"
+const introductionResponse = "/introduction-response"
 
 func TestHTTPTransport(t *testing.T) {
 	// test wrong/bad handler requests and finally a passing test case
@@ -173,6 +176,42 @@ func TestHTTPTransport(t *testing.T) {
 			respData:       "",
 			expectedStatus: http.StatusUnsupportedMediaType,
 		},
+		{
+			name:           "Send Introduction Proposal",
+			httpMethod:     "POST",
+			url:            introductionProposal,
+			contentType:    commContentType,
+			failHTTPPost:   false,
+			sendUrl:        "https://localhost:8090" + introductionProposal,
+			sendPayload:    "payload",
+			failSend:       false,
+			respData:       "",
+			expectedStatus: http.StatusAccepted,
+		},
+		{
+			name:           "Send Introduction Request",
+			httpMethod:     "POST",
+			url:            introductionRequest,
+			contentType:    commContentType,
+			failHTTPPost:   false,
+			sendUrl:        "https://localhost:8090" + introductionRequest,
+			sendPayload:    "payload",
+			failSend:       false,
+			respData:       "",
+			expectedStatus: http.StatusAccepted,
+		},
+		{
+			name:           "Send Introduction Response",
+			httpMethod:     "POST",
+			url:            introductionResponse,
+			contentType:    commContentType,
+			failHTTPPost:   false,
+			sendUrl:        "https://localhost:8090" + introductionResponse,
+			sendPayload:    "payload",
+			failSend:       false,
+			respData:       "",
+			expectedStatus: http.StatusAccepted,
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
@@ -238,6 +277,15 @@ func TestMain(m *testing.M) {
 			return nil
 		}},
 		ExchangeResponse: &transport.RequestRouter{Path: exchangeResponse, HandlerFunc: func(payload []byte) error {
+			return nil
+		}},
+		IntroductionProposal: &transport.RequestRouter{Path: introductionProposal, HandlerFunc: func(payload []byte) error {
+			return nil
+		}},
+		IntroductionRequest: &transport.RequestRouter{Path: introductionRequest, HandlerFunc: func(payload []byte) error {
+			return nil
+		}},
+		IntroductionResponse: &transport.RequestRouter{Path: introductionResponse, HandlerFunc: func(payload []byte) error {
 			return nil
 		}},
 	}

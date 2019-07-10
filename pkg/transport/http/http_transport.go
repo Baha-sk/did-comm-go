@@ -179,6 +179,15 @@ func DIDCommRequestHandler(handler http.Handler, commHandler *transport.DIDCommH
 		case commHandler.ExchangeResponse.Path:
 			processPOSTRequest(w, r, commHandler.ExchangeResponse.HandlerFunc)
 			return
+		case commHandler.IntroductionProposal.Path:
+			processPOSTRequest(w, r, commHandler.IntroductionProposal.HandlerFunc)
+			return
+		case commHandler.IntroductionRequest.Path:
+			processPOSTRequest(w, r, commHandler.IntroductionRequest.HandlerFunc)
+			return
+		case commHandler.IntroductionResponse.Path:
+			processPOSTRequest(w, r, commHandler.IntroductionResponse.HandlerFunc)
+			return
 		}
 
 		handler.ServeHTTP(w, r)
@@ -235,6 +244,9 @@ func validMethodAndContentType(w http.ResponseWriter, r *http.Request) bool {
 func validateHandler(router *transport.DIDCommHandler) {
 	validateRequestRouter(router.ExchangeRequest, "Exchange Request")
 	validateRequestRouter(router.ExchangeResponse, "Exchange Response")
+	validateRequestRouter(router.IntroductionProposal, "Introduction Proposal")
+	validateRequestRouter(router.IntroductionRequest, "Introduction Request")
+	validateRequestRouter(router.IntroductionResponse, "Introduction Response")
 }
 
 func validateRequestRouter(processor *transport.RequestRouter, handlerType string) {
