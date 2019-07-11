@@ -8,6 +8,7 @@
 set -e
 
 DOCKER_CMD=${DOCKER_CMD:-docker}
+GOLANGCI_LINT_VERSION=v1.16.0
 
 if [ ! $(command -v ${DOCKER_CMD}) ]; then
     exit 0
@@ -15,6 +16,6 @@ fi
 
 echo "GolangCI Linter :: Started"
 
-${DOCKER_CMD} run --rm -e GOPROXY=${GOPROXY} -v $(pwd):/goapp -e RUN=1 -e REPO=github.com/trustbloc/aries-framework-go golangci/build-runner goenvbuild
+${DOCKER_CMD} run -v $(pwd):/opt/workspace -w /opt/workspace golangci/golangci-lint:${GOLANGCI_LINT_VERSION} golangci-lint run
 
 echo "GolangCI Linter :: Completed"
