@@ -23,5 +23,6 @@ generate-test-keys: clean
 
 clean:
 	rm -Rf test/fixtures/keys
+	rm -f coverage.txt
 
 .PHONY: all checks
