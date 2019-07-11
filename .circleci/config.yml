@@ -6,7 +6,7 @@ version: 2
 jobs:
   checks:
     docker:
-      - image: golangci/build-runner
+      - image: golangci/golangci-lint:v1.16.0
     environment:
       - REPO: github.com/trustbloc/aries-framework-go
       - RUN: 1
@@ -14,7 +14,7 @@ jobs:
     steps:
       - checkout
       - run: make checks
-      - run: goenvbuild
+      - run: golangci-lint run
   unit-test:
     docker:
       - image: circleci/golang:1.12
