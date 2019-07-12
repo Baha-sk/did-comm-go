@@ -89,6 +89,12 @@ func (cs *OutboundCommHTTP) Send(data string, url string) (string, error) {
 			return "", errors.Errorf("Warning - Received non success POST HTTP status from agent at [%s]: status : %v", url, resp.Status)
 		}
 		// handle response
+		defer func() {
+			err := resp.Body.Close()
+			if err != nil {
+				log.Printf("HTTP Transport - Error closing response body: %v", err)
+			}
+		}()
 		buf := new(bytes.Buffer)
 		_, err := buf.ReadFrom(resp.Body)
 		if err != nil {
